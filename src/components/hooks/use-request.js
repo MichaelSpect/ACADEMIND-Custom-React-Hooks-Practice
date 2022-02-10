@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 
-const useRequest = (requestConfig) => {
+const useRequest = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const enterTaskHandler = async (taskText) => {
+  const sendRequest = useCallback(async (requestConfig, applyData) => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await fetch(requestConfig.url, {
         method: requestConfig.method ? requestConfig.method : "GET",
-        headers: requestConfig.headers,
-        body: JSON.stringify(requestConfig.body),
+        headers: requestConfig.headers ? requestConfig.headers : {},
+        body: requestConfig.body ? JSON.stringify(requestConfig.body) : null,
       });
 
       if (!response.ok) {
@@ -19,18 +19,19 @@ const useRequest = (requestConfig) => {
       }
 
       const data = await response.json();
-
-      const generatedId = data.name; // firebase-specific => "name" contains generated id
-      const createdTask = { id: generatedId, text: taskText };
-
-      props.onAddTask(createdTask);
+      console.log(data);
+      applyData(data);
     } catch (err) {
       setError(err.message || "Something went wrong!");
     }
     setIsLoading(false);
-  };
+  }, []);
 
-  return {};
+  return {
+    error,
+    isLoading,
+    sendRequest,
+  };
 };
 
 export default useRequest;
